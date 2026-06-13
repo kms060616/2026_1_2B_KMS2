@@ -231,14 +231,19 @@ public class CardManager : MonoBehaviour
     public void SelectRewardCard(int choiceIndex)
     {
         CardData selectedCard = currentRewardChoices[choiceIndex];
-        
 
         if (discardCards != null)
         {
             discardCards.Add(selectedCard);
         }
+        
+        else
+        {
+            deckCards.Add(selectedCard);
+        }
 
         Debug.Log($"º¸»ó È¹µæ! µ¦¿¡ [{selectedCard.cardName}] Ä«µå°¡ Ãß°¡µÇ¾ú½À´Ï´Ù.");
+
         cardRewardPanel.SetActive(false);
 
         if (StageManager.Instance != null)

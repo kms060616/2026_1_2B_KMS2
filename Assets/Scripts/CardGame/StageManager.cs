@@ -1,11 +1,16 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class StageManager : MonoBehaviour
 {
     private static StageManager instance;
     public static StageManager Instance => instance;
+
+    [Header("게임 종료 UI 연결")]
+    public GameObject gameClearPanel;
+    public GameObject gameOverPanel;
 
     [System.Serializable]
     public class StageData
@@ -46,6 +51,10 @@ public class StageManager : MonoBehaviour
         if (index >= stages.Count)
         {
             Debug.Log("모든 스테이지를 클리어했습니다! 게임 승리!");
+            if (gameClearPanel != null)
+            {
+                gameClearPanel.SetActive(true);
+            }
             return;
         }
         currentStageIndex = index;
@@ -87,8 +96,16 @@ public class StageManager : MonoBehaviour
                 Destroy(cardObj);
             }
             CardManager.Instance.cardObjects.Clear();
-            CardManager.Instance.handCards.Clear();
+
+            if (CardManager.Instance.handCards.Count > 0)
+            {
+                CardManager.Instance.discardCards.AddRange(CardManager.Instance.handCards);
+                CardManager.Instance.handCards.Clear();
+                Debug.Log("이전 스테이지의 손패를 모두 무덤(discardCards)으로 안전하게 보냈습니다.");
+            }
+
             CardManager.Instance.ReturnDiscardsToDeck();
+
             for (int i = 0; i < 4; i++)
             {
                 CardManager.Instance.DrawCard();
@@ -132,5 +149,11 @@ public class StageManager : MonoBehaviour
 
         Debug.Log("적의 행동 차례입니다.");
         CardManager.Instance.EnemyStats.TakeEnemyAction();
+    }
+
+    public void RestartGame()
+    {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        SceneManager.LoadScene(currentSceneName);
     }
 }

@@ -94,6 +94,10 @@ public class CharacterStats : MonoBehaviour
             else
             {
                 Debug.Log("플레이어가 사망했습니다. 게임 오버!");
+                if (StageManager.Instance != null && StageManager.Instance.gameOverPanel != null)
+                {
+                    StageManager.Instance.gameOverPanel.SetActive(true);
+                }
             }
         }
 
