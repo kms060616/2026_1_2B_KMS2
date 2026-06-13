@@ -1,16 +1,107 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class StageManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private static StageManager instance;
+    public static StageManager Instance => instance;
+
+    [System.Serializable]
+    public class StageData
     {
-        
+        public string stageName; 
+        public GameObject enemyPrefab;
     }
 
-    // Update is called once per frame
-    void Update()
+    [Header("스테이지 설정")]
+    public List<StageData> stages = new List<StageData>();
+    public int currentStageIndex = 0; 
+
+    [Header("UI 연결 (선택)")]
+    public TextMeshProUGUI stageText;
+
+    [Header("적 생성 위치")]
+    public Transform enemySpawnPoint;
+    private GameObject currentEnemyObject;
+
+    private void Awake()
     {
-        
+        if (instance == null) instance = this;
+        else Destroy(gameObject);
+    }
+
+    void Start()
+    {
+        if (stages.Count == 0)
+        {
+            Debug.LogError("StageManager: 인스펙터에서 스테이지 데이터를 설정해주세요!");
+            return;
+        }
+
+        StartStage(currentStageIndex);
+    }
+    public void StartStage(int index)
+    {
+        if (index >= stages.Count)
+        {
+            Debug.Log("모든 스테이지를 클리어했습니다! 게임 승리!");
+            return;
+        }
+        currentStageIndex = index;
+        StageData currentStage = stages[currentStageIndex];
+
+        if (stageText != null)
+        {
+            stageText.text = currentStage.stageName;
+        }
+        else
+        {
+            Debug.LogWarning("StageManager: stageText 변수가 인스펙터에서 비어있습니다!");
+        }
+
+        if (currentEnemyObject != null)
+        {
+            Destroy(currentEnemyObject);
+        }
+
+        currentEnemyObject = Instantiate(currentStage.enemyPrefab, enemySpawnPoint.position, Quaternion.identity);
+
+        if (currentEnemyObject != null)
+        {
+            Destroy(currentEnemyObject);
+        }
+
+        currentEnemyObject = Instantiate(currentStage.enemyPrefab, enemySpawnPoint.position, Quaternion.identity);
+
+        if (CardManager.Instance != null)
+        {
+            CardManager.Instance.EnemyStats = currentEnemyObject.GetComponent<CharacterStats>();
+        }
+        if (CardManager.Instance != null && CardManager.Instance.playerStats != null)
+        {
+            CardManager.Instance.playerStats.GainMana(CardManager.Instance.playerStats.maxMana);
+        }
+        if (CardManager.Instance != null)
+        {
+            foreach (var cardObj in new List<GameObject>(CardManager.Instance.cardObjects))
+            {
+                Destroy(cardObj);
+            }
+            CardManager.Instance.cardObjects.Clear();
+            CardManager.Instance.handCards.Clear();
+            CardManager.Instance.ReturnDiscardsToDeck();
+
+            for (int i = 0; i < 4; i++)
+            {
+                CardManager.Instance.DrawCard();
+            }
+        }
+    }
+    public void OnEnemyDefeated()
+    {
+        Debug.Log($"{stages[currentStageIndex].stageName} 클리어!");
+        currentStageIndex++;
+        StartStage(currentStageIndex);
     }
 }

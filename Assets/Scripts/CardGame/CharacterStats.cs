@@ -6,13 +6,10 @@ public class CharacterStats : MonoBehaviour
     public string characterName;
     public int maxHealth = 100;
     public int currentHealth;
-
-    public Slider healthBar;
-    public TextMeshPro healthText;
+    public TextMeshProUGUI healthText;
 
     public int maxMana = 10;
     public int currentMana;
-    public Slider manaBar;
     public TextMeshProUGUI manaText;
 
 
@@ -49,12 +46,31 @@ public class CharacterStats : MonoBehaviour
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
+
+        if (currentHealth <= 0)
+        {
+            currentHealth = 0;
+
+            if (gameObject.layer == LayerMask.NameToLayer("Enemy"))
+            {
+                if (StageManager.Instance != null)
+                {
+                    StageManager.Instance.OnEnemyDefeated();
+                }
+            }
+            else
+            {
+                Debug.Log("플레이어가 사망했습니다. 게임 오버!");
+            }
+        }
+
         if (DamageEffectManager.instance != null)
         {
             Vector3 position = transform.position;
             position += new Vector3(Random.Range(-0.5f, 0.5f), Random.Range(1.0f, 1.5f), 0);
             DamageEffectManager.instance.ShowDamage(position, damage, false);
         }
+        UpdateUI();
     }
     public void Heal(int amount)
     {
@@ -69,22 +85,13 @@ public class CharacterStats : MonoBehaviour
 
     private void UpdateUI()
     {
-        if (healthBar != null)
-        {
-            healthBar.value = (float)currentHealth / maxHealth;
-
-        }
         if (healthText != null)
         {
-            healthText.text = $"{currentHealth} / {maxHealth}";
-        }
-        if (manaBar != null)
-        {
-            manaBar.value = (float) currentMana / maxMana;
+            healthText.text = $"HP:{currentHealth} / {maxHealth}";
         }
         if (manaText != null)
         {
-            manaText.text = $"{currentMana} / {maxMana}";
+            manaText.text = $"MP:{currentMana} / {maxMana}";
         }
     }
 
