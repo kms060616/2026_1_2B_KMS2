@@ -105,14 +105,27 @@ public class StageManager : MonoBehaviour
     private System.Collections.IEnumerator NextStageDelayRoutine(int nextIndex)
     {
         yield return null;
-        StartStage(nextIndex);
+
+        if (CardManager.Instance != null)
+        {
+            CardManager.Instance.ShowCardReward();
+        }
+    }
+    public void ProceedToNextStage()
+    {
+        StartStage(currentStageIndex);
     }
 
     public System.Collections.IEnumerator OnCardUsedRoutine()
     {
-        yield return null;
+        if (CardManager.Instance == null ||
+            CardManager.Instance.EnemyStats == null ||
+            CardManager.Instance.EnemyStats.currentHealth <= 0)
+        {
+            yield break;
+        }
 
-        if (CardManager.Instance == null || CardManager.Instance.EnemyStats == null || CardManager.Instance.EnemyStats.currentHealth <= 0)
+        if (CardManager.Instance.EnemyStats.gameObject == null)
         {
             yield break;
         }

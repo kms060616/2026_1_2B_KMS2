@@ -20,4 +20,4 @@ MonoBehaviour:
   cardType: 1
   additionalEffects:
   - effectType: 3
-    effectAmount: 10
+    effectAmount: 5

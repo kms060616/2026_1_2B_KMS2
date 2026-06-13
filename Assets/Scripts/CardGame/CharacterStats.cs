@@ -66,9 +66,9 @@ public class CharacterStats : MonoBehaviour
             int healBonus = 0;
             if (StageManager.Instance != null)
             {
-                healBonus = StageManager.Instance.currentStageIndex * 2;
+                healBonus = StageManager.Instance.currentStageIndex * 1;
             }
-            int finalHeal = 8 + healBonus;
+            int finalHeal = 2 + healBonus;
 
             Debug.Log($"{characterName}이(가) 숨을 고르며 체력을 {finalHeal} 회복합니다.");
             Heal(finalHeal);

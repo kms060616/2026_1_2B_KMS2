@@ -1,6 +1,8 @@
 
-using UnityEngine;
 using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class CardManager : MonoBehaviour
 {
@@ -19,7 +21,16 @@ public class CardManager : MonoBehaviour
     public CharacterStats EnemyStats;
 
     private static CardManager instance;
-   
+
+    [Header("보상 시스템 설정")]
+    public List<CardData> allPossibleCards = new List<CardData>();
+
+    public GameObject cardRewardPanel;
+    public List<Button> rewardButtons;
+    public List<TextMeshProUGUI> rewardButtonTexts;
+
+    private List<CardData> currentRewardChoices = new List<CardData>();
+
     public static CardManager Instance
     {
         get { if (instance == null) instance = new CardManager(); return instance; }
@@ -77,14 +88,21 @@ public class CardManager : MonoBehaviour
 
     public void DrawCard()
     {
-        if(handCards.Count >= 6)
+        if (handCards.Count >= 6)
         {
             Debug.Log("손패가 가득찼습니다 최대6장");
             return;
         }
-        if(deckCards.Count == 0)
+
+        if (deckCards.Count == 0)
         {
-            Debug.Log("덱에 카드가 없습니다");
+            Debug.Log("덱이 비었습니다! 버린 카드 더미를 덱으로 되돌리고 새로 섞습니다.");
+            ReturnDiscardsToDeck(); 
+        }
+
+        if (deckCards.Count == 0)
+        {
+            Debug.Log("덱과 버린 카드 더미가 모두 비어있어 카드를 드로우할 수 없습니다.");
             return;
         }
 
@@ -180,6 +198,53 @@ public class CardManager : MonoBehaviour
         ShuffleDeck();
         Debug.Log("버린 카드" + deckCards.Count + "장을 덱으로 되돌리고 섞었습니다");
 
+    }
+
+    public void ShowCardReward()
+    {
+        if (allPossibleCards.Count < 3)
+        {
+            Debug.LogError("전체 카드 목록(allPossibleCards)에 카드가 최소 3장 이상 있어야 합니다!");
+            return;
+        }
+
+        currentRewardChoices.Clear();
+        cardRewardPanel.SetActive(true);
+        List<CardData> shuffledTotalCards = new List<CardData>(allPossibleCards);
+        for (int i = 0; i < shuffledTotalCards.Count; i++)
+        {
+            int rnd = Random.Range(0, shuffledTotalCards.Count);
+            CardData temp = shuffledTotalCards[i];
+            shuffledTotalCards[i] = shuffledTotalCards[rnd];
+            shuffledTotalCards[rnd] = temp;
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            currentRewardChoices.Add(shuffledTotalCards[i]);
+            rewardButtonTexts[i].text = $"{shuffledTotalCards[i].cardName}\n(코스트: {shuffledTotalCards[i].manaCost})\n\n{shuffledTotalCards[i].description}";
+            int index = i; 
+            rewardButtons[i].onClick.RemoveAllListeners();
+            rewardButtons[i].onClick.AddListener(() => SelectRewardCard(index));
+        }
+    }
+
+    public void SelectRewardCard(int choiceIndex)
+    {
+        CardData selectedCard = currentRewardChoices[choiceIndex];
+        
+
+        if (discardCards != null)
+        {
+            discardCards.Add(selectedCard);
+        }
+
+        Debug.Log($"보상 획득! 덱에 [{selectedCard.cardName}] 카드가 추가되었습니다.");
+        cardRewardPanel.SetActive(false);
+
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.ProceedToNextStage();
+        }
     }
 
 }
