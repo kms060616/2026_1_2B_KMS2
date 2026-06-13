@@ -267,7 +267,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStats
   characterName: "\uACE0\uBE14\uB9B0"
   maxHealth: 15
-  currentHealth: 0
+  currentHealth: 15
   healthText: {fileID: 2576947709111083556}
   maxMana: 10
   currentMana: 0

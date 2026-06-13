@@ -171,17 +171,16 @@ public class CardDisplay : MonoBehaviour
 
     public void ProcessAdditionalEffectsAndDiscard()
     {
-        //카드 데이터 및 인덱스 보존
+        // 카드 데이터 및 인덱스 보존
         CardData cardDataCopy = cardData;
         int cardIndexCopy = cardIndex;
 
-        //추가 효과 적용
-        foreach(var effect in cardDataCopy.additionalEffects)
+        // 1. 추가 효과 적용 (반복문)
+        foreach (var effect in cardDataCopy.additionalEffects)
         {
             switch (effect.effectType)
             {
                 case CardData.AdditionalEffectType.DrawCard:
-
                     for (int i = 0; i < effect.effectAmount; i++)
                     {
                         if (CardManager.Instance != null)
@@ -189,46 +188,40 @@ public class CardDisplay : MonoBehaviour
                             CardManager.Instance.DrawCard();
                         }
                     }
-
                     Debug.Log($"{effect.effectAmount} 장의 카드를 드로우 했습니다.");
-
                     break;
-                     
-                case CardData.AdditionalEffectType.DiscardCard:             //카드 버리기 구현(랜덤 버리기)
-                    for(int i = 0; i < effect.effectAmount; i++)
+
+                case CardData.AdditionalEffectType.DiscardCard: // 카드 버리기 구현(랜덤 버리기)
+                    for (int i = 0; i < effect.effectAmount; i++)
                     {
                         if (CardManager.Instance != null && CardManager.Instance.handCards.Count > 0)
                         {
-                            int randomIndex = Random.Range(0 , CardManager.Instance.handCards.Count);   //손패 크기 기준으로 랜덤 인덱스 생성
+                            int randomIndex = Random.Range(0, CardManager.Instance.handCards.Count);
 
                             Debug.Log($"랜덤 카드 버리기 : 선택된 인덱스 {randomIndex} , 현재 손패 크기 : {CardManager.Instance.handCards.Count}");
 
-                            if  (cardIndexCopy < CardManager.Instance.handCards.Count)
+                            if (cardIndexCopy < CardManager.Instance.handCards.Count)
                             {
-                                if(randomIndex != cardIndexCopy)
+                                if (randomIndex != cardIndexCopy)
                                 {
                                     CardManager.Instance.DiscardCard(randomIndex);
-
-                                    //만약 버린 카드의 인덱스가 현재 카드의 인덱스보다 작다면 현재 카드의 인덱스를 1 감소 시켜야 함
                                     if (randomIndex < cardIndexCopy)
                                     {
                                         cardIndexCopy--;
                                     }
                                 }
-                                else if(CardManager.Instance.handCards.Count > 1)
+                                else if (CardManager.Instance.handCards.Count > 1)
                                 {
-                                    //다른 카드 선택
-                                    int newIndex = (randomIndex + 1)% CardManager.Instance.handCards.Count;
+                                    int newIndex = (randomIndex + 1) % CardManager.Instance.handCards.Count;
                                     CardManager.Instance.DiscardCard(newIndex);
-                                    if(randomIndex < cardIndexCopy)
+                                    if (randomIndex < cardIndexCopy)
                                     {
                                         cardIndexCopy--;
                                     }
-                                }  
+                                }
                             }
                             else
                             {
-                                //cardIndexCopy 가 더이상 유효하지 않은 경우 , 아무 카드나 버림
                                 CardManager.Instance.DiscardCard(randomIndex);
                             }
                         }
@@ -236,8 +229,7 @@ public class CardDisplay : MonoBehaviour
                     break;
 
                 case CardData.AdditionalEffectType.GainMana:
-                    
-                    if(CardManager.Instance.playerStats != null)
+                    if (CardManager.Instance.playerStats != null)
                     {
                         CardManager.Instance.playerStats.GainMana(effect.effectAmount);
                         Debug.Log($"마나를 {effect.effectAmount} 획득 했습니다.");
@@ -245,21 +237,28 @@ public class CardDisplay : MonoBehaviour
                     break;
 
                 case CardData.AdditionalEffectType.ReduceEnemyMana:
-
                     if (CardManager.Instance.EnemyStats != null)
                     {
                         CardManager.Instance.EnemyStats.UseMana(effect.effectAmount);
                         Debug.Log($"적이 마나를 {effect.effectAmount} 잃었습니다.");
                     }
                     break;
-            }           
-        }
+            } // switch 끝
+        } // foreach 끝
 
-        //효과 적용 후 현재 카드르 버리기 
+        // ====================================================================
+        // 2. 중요: 모든 추가 효과가 완전히 끝난 뒤 최종 마무리 처리
+        // ====================================================================
 
+        // 사용한 카드를 무덤으로 정상 적용
         if (CardManager.Instance != null)
         {
             CardManager.Instance.DiscardCard(cardIndexCopy);
+        }
+
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.StartCoroutine(StageManager.Instance.OnCardUsedRoutine());
         }
     }
 }

@@ -12,8 +12,6 @@ public class CharacterStats : MonoBehaviour
     public int currentMana;
     public TextMeshProUGUI manaText;
 
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         currentHealth = maxHealth;
@@ -24,7 +22,7 @@ public class CharacterStats : MonoBehaviour
     public void UseMana(int amount)
     {
         currentMana -= amount;
-        if(currentMana < 0)
+        if (currentMana < 0)
         {
             currentMana = 0;
         }
@@ -37,16 +35,49 @@ public class CharacterStats : MonoBehaviour
         if (currentMana > maxMana)
         {
             currentMana = maxMana;
-
         }
         UpdateUI();
     }
 
-    
+    public void TakeEnemyAction()
+    {
+        if (gameObject.layer != LayerMask.NameToLayer("Enemy")) return;
+
+        int randomAction = Random.Range(0, 2);
+
+        if (randomAction == 0)
+        {
+            if (CardManager.Instance != null && CardManager.Instance.playerStats != null)
+            {
+                int stageBonus = 0;
+                if (StageManager.Instance != null)
+                {
+                    stageBonus = StageManager.Instance.currentStageIndex * 5;
+                }
+
+                int finalDamage = 10 + stageBonus;
+
+                Debug.Log($"{characterName}의 반격! 플레이어에게 {finalDamage}의 피해를 줍니다. (스테이지 보너스: +{stageBonus})");
+                CardManager.Instance.playerStats.TakeDamage(finalDamage);
+            }
+        }
+        else
+        {
+            int healBonus = 0;
+            if (StageManager.Instance != null)
+            {
+                healBonus = StageManager.Instance.currentStageIndex * 2;
+            }
+            int finalHeal = 8 + healBonus;
+
+            Debug.Log($"{characterName}이(가) 숨을 고르며 체력을 {finalHeal} 회복합니다.");
+            Heal(finalHeal);
+        }
+    }
+
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
-
         if (currentHealth <= 0)
         {
             currentHealth = 0;
@@ -56,6 +87,8 @@ public class CharacterStats : MonoBehaviour
                 if (StageManager.Instance != null)
                 {
                     StageManager.Instance.OnEnemyDefeated();
+                    UpdateUI();
+                    return; 
                 }
             }
             else
@@ -72,15 +105,22 @@ public class CharacterStats : MonoBehaviour
         }
         UpdateUI();
     }
+
     public void Heal(int amount)
     {
         currentHealth += amount;
+        if (currentHealth > maxHealth)
+        {
+            currentHealth = maxHealth;
+        }
+
         if (DamageEffectManager.instance != null)
         {
             Vector3 position = transform.position;
             position += new Vector3(Random.Range(-0.5f, 0.5f), Random.Range(1.0f, 1.5f), 0);
             DamageEffectManager.instance.ShowHeal(position, amount, false);
         }
+        UpdateUI();
     }
 
     private void UpdateUI()

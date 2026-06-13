@@ -67,21 +67,19 @@ public class StageManager : MonoBehaviour
 
         currentEnemyObject = Instantiate(currentStage.enemyPrefab, enemySpawnPoint.position, Quaternion.identity);
 
-        if (currentEnemyObject != null)
-        {
-            Destroy(currentEnemyObject);
-        }
-
-        currentEnemyObject = Instantiate(currentStage.enemyPrefab, enemySpawnPoint.position, Quaternion.identity);
-
-        if (CardManager.Instance != null)
+        if (CardManager.Instance != null && currentEnemyObject != null)
         {
             CardManager.Instance.EnemyStats = currentEnemyObject.GetComponent<CharacterStats>();
         }
         if (CardManager.Instance != null && CardManager.Instance.playerStats != null)
         {
-            CardManager.Instance.playerStats.GainMana(CardManager.Instance.playerStats.maxMana);
+            CharacterStats player = CardManager.Instance.playerStats;
+            player.GainMana(player.maxMana);
+            player.Heal(player.maxHealth);
+
+            Debug.Log("다음 스테이지 시작: 플레이어의 HP와 MP가 완전히 회복되었습니다!");
         }
+
         if (CardManager.Instance != null)
         {
             foreach (var cardObj in new List<GameObject>(CardManager.Instance.cardObjects))
@@ -91,7 +89,6 @@ public class StageManager : MonoBehaviour
             CardManager.Instance.cardObjects.Clear();
             CardManager.Instance.handCards.Clear();
             CardManager.Instance.ReturnDiscardsToDeck();
-
             for (int i = 0; i < 4; i++)
             {
                 CardManager.Instance.DrawCard();
@@ -102,6 +99,25 @@ public class StageManager : MonoBehaviour
     {
         Debug.Log($"{stages[currentStageIndex].stageName} 클리어!");
         currentStageIndex++;
-        StartStage(currentStageIndex);
+        StartCoroutine(NextStageDelayRoutine(currentStageIndex));
+    }
+
+    private System.Collections.IEnumerator NextStageDelayRoutine(int nextIndex)
+    {
+        yield return null;
+        StartStage(nextIndex);
+    }
+
+    public System.Collections.IEnumerator OnCardUsedRoutine()
+    {
+        yield return null;
+
+        if (CardManager.Instance == null || CardManager.Instance.EnemyStats == null || CardManager.Instance.EnemyStats.currentHealth <= 0)
+        {
+            yield break;
+        }
+
+        Debug.Log("적의 행동 차례입니다.");
+        CardManager.Instance.EnemyStats.TakeEnemyAction();
     }
 }
