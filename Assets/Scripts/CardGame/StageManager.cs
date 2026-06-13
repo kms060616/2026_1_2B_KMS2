@@ -12,6 +12,8 @@ public class StageManager : MonoBehaviour
     public GameObject gameClearPanel;
     public GameObject gameOverPanel;
 
+    private bool isTransitioningStage = false;
+
     [System.Serializable]
     public class StageData
     {
@@ -40,7 +42,8 @@ public class StageManager : MonoBehaviour
     {
         if (stages.Count == 0)
         {
-            Debug.LogError("StageManager: 인스펙터에서 스테이지 데이터를 설정해주세요!");
+            Debug.Log("모든 스테이지를 클리어했습니다! 게임 승리!");
+            if (gameClearPanel != null) gameClearPanel.SetActive(true);
             return;
         }
 
@@ -48,6 +51,8 @@ public class StageManager : MonoBehaviour
     }
     public void StartStage(int index)
     {
+        isTransitioningStage = true;
+
         if (index >= stages.Count)
         {
             Debug.Log("모든 스테이지를 클리어했습니다! 게임 승리!");
@@ -111,10 +116,13 @@ public class StageManager : MonoBehaviour
                 CardManager.Instance.DrawCard();
             }
         }
+        isTransitioningStage = false;
     }
     public void OnEnemyDefeated()
     {
         Debug.Log($"{stages[currentStageIndex].stageName} 클리어!");
+        isTransitioningStage = true;
+
         currentStageIndex++;
         StartCoroutine(NextStageDelayRoutine(currentStageIndex));
     }
@@ -123,6 +131,16 @@ public class StageManager : MonoBehaviour
     {
         yield return null;
 
+        if (nextIndex >= stages.Count)
+        {
+            Debug.Log("마지막 스테이지까지 모두 클리어했습니다! 보상 없이 게임 클리어 패널을 띄웁니다.");
+
+            if (gameClearPanel != null)
+            {
+                gameClearPanel.SetActive(true);
+            }
+            yield break;
+        }
         if (CardManager.Instance != null)
         {
             CardManager.Instance.ShowCardReward();
@@ -135,15 +153,14 @@ public class StageManager : MonoBehaviour
 
     public System.Collections.IEnumerator OnCardUsedRoutine()
     {
-        if (CardManager.Instance == null ||
+        yield return null;
+
+        if (isTransitioningStage ||
+            CardManager.Instance == null ||
             CardManager.Instance.EnemyStats == null ||
             CardManager.Instance.EnemyStats.currentHealth <= 0)
         {
-            yield break;
-        }
-
-        if (CardManager.Instance.EnemyStats.gameObject == null)
-        {
+            Debug.Log("적이 사망했거나 스테이지 전환 중이므로 적의 행동을 스킵합니다.");
             yield break;
         }
 

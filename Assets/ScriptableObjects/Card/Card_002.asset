@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "\uAE30\uBCF8\uD790"
   artwork: {fileID: 21300000, guid: feb8709f10385a94095b55fe8d0f625c, type: 3}
   manaCost: 2
-  effectAmount: 5
+  effectAmount: 8
   cardType: 1
   additionalEffects:
   - effectType: 0
